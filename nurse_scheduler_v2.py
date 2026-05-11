@@ -396,7 +396,7 @@ def export_to_excel(
     ws.cell(row=1, column=3, value="上段夜班")
     first_day_col = 4
     for i, day in enumerate(days, start=first_day_col):
-        ws.cell(row=1, column=i, value=day.strftime("%m/%d"))
+        ws.cell(row=1, column=i, value=day.day)
         ws.cell(row=2, column=i, value=("一二三四五六日")[day.weekday()])
     ws.cell(row=1, column=first_day_col + len(days), value="休假天數")
     ws.cell(row=1, column=first_day_col + len(days) + 1, value="假日天數")
@@ -433,7 +433,7 @@ def export_to_excel(
     ws.cell(row=summary_row + 2, column=1, value="小夜 E")
     ws.cell(row=summary_row + 3, column=1, value="大夜 N")
     for c, day in enumerate(days, start=first_day_col):
-        ws.cell(row=summary_row, column=c, value=day.strftime("%m/%d"))
+        ws.cell(row=summary_row, column=c, value=day.day)
         ws.cell(row=summary_row + 1, column=c, value=sum(1 for emp in employees if schedule[emp.name][day] == "D"))
         ws.cell(row=summary_row + 2, column=c, value=sum(1 for emp in employees if schedule[emp.name][day] == "E"))
         ws.cell(row=summary_row + 3, column=c, value=sum(1 for emp in employees if schedule[emp.name][day] == "N"))
