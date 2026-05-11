@@ -163,7 +163,7 @@ edited_df = st.data_editor(
         "second_shift": st.column_config.SelectboxColumn("次偏好班別(可空白)", options=[""] + SHIFT_OPTIONS),
         "previous_last_shift": st.column_config.TextColumn("上段最後一班(例:3D,2OF)"),
         "previous_night_count": st.column_config.TextColumn(
-            "上段夜班數(留空=不限制；表內如12+8=至少還需8班E/N至月底共≥20，可超過)"
+            "上段夜班數(留空=不限制；表內如12+8=本曆月至月底尚須8班E/N，上段+本月剛好共20班)"
         ),
     },
 )
