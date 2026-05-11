@@ -76,7 +76,11 @@ def row_to_employee(row: pd.Series, r_dates: list[str]) -> dict:
 st.set_page_config(page_title="護理排班系統", page_icon="🗓️", layout="wide")
 st.title("護理排班系統")
 
-cfg = load_config()
+try:
+    cfg = load_config()
+except FileNotFoundError:
+    st.error(f"找不到設定檔：{CONFIG_PATH}（請確認已與 streamlit_app.py 一併上傳到 GitHub）")
+    st.stop()
 if "base_seed" not in st.session_state:
     st.session_state.base_seed = int(cfg.get("random_seed", 42))
 if "version_offset" not in st.session_state:
@@ -216,7 +220,34 @@ if generate_clicked or next_clicked:
             random_seed=seed_used,
         )
         schedule = solve_schedule(employee_objs, days, rule)
-        export_to_excel(new_cfg["output_file"], employee_objs, schedule, days, rule.national_holidays)
-        st.success(f"完成！已輸出：{new_cfg['output_file']}（第 {st.session_state.version_offset + 1} 版）")
+        out_name = new_cfg["output_file"].strip() or "nurse_schedule.xlsx"
+        out_path = BASE_DIR / out_name
+        export_to_excel(str(out_path), employee_objs, schedule, days, rule.national_holidays)
+        st.success(f"完成（第 {st.session_state.version_offset + 1} 版）")
+        if out_path.is_file():
+            st.download_button(
+                label="下載 Excel",
+                data=out_path.read_bytes(),
+                file_name=out_path.name,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key=f"dl_{seed_used}_{st.session_state.version_offset}",
+            )
     except Exception as e:
         st.error(f"產生失敗：{e}")
+
+
+if __name__ == "__main__":
+    import subprocess
+    import sys
+
+    try:
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+    except Exception:  # noqa: BLE001
+        get_script_run_ctx = lambda: None  # type: ignore[misc]
+
+    if get_script_run_ctx() is None:
+        subprocess.run(
+            [sys.executable, "-m", "streamlit", "run", str(Path(__file__).resolve()), *sys.argv[1:]],
+            check=False,
+        )
+        sys.exit(0)

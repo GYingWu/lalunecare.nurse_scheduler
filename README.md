@@ -50,5 +50,19 @@ git push -u origin main
 
 ## 注意事項
 
-- 雲端產生的 Excel 會由瀏覽器下載；`config.sample.json` 在雲端重啟後可能還原為 repo 內版本（屬正常現象）。
+- 排班完成後請按頁面上的 **「下載 Excel」**，雲端無法像本機一樣自動開啟檔案總管裡的 xlsx。
+- `config.sample.json` 在雲端冷啟後會還原成 repo 內版本（屬正常現象）。
 - 若需長期保存每位使用者的設定，需另行接資料庫或雲端儲存（可再擴充）。
+
+## 無法開啟時請檢查
+
+### 本機
+
+- 請用：`python -m streamlit run streamlit_app.py`（或雙擊 `啟動排班系統.bat`）。
+- **不要**用 `python streamlit_app.py` 直接跑（不會正常出現網頁）；若誤用，已內建會嘗試自動改呼叫 `streamlit run`。
+
+### Streamlit Cloud
+
+- 免費版 App 一陣子沒人使用會**休眠**，第一次開可能要等 30～90 秒，請重新整理。
+- 到 Cloud 後台該 App → **Logs**，看紅字是否為套件安裝失敗或 `config.sample.json` 找不到。
+- **Main file path** 必須是：`streamlit_app.py`（在 repo 根目錄）。
