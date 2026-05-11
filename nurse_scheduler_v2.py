@@ -91,12 +91,15 @@ def build_employees(raw_employees: Sequence[dict]) -> List[Employee]:
     return employees
 
 
+NIGHT_COUNT_MONTH_MIN = 20  # 該曆月月底（含上段）E+N 合計至少此數；可超過。
+
+
 def format_night_carryover_display(emp: Employee) -> str:
-    """範例：12+8 表示上段累計 12 班夜班，本月還需 8 班至 20。"""
+    """範例：12+8 表示上段累計 12 班夜班，月底前至少還需 8 班 E/N（上段+本月≥門檻）；上段已≥門檻則顯示 +0。"""
     if emp.previous_night_count is None:
         return ""
     p = int(emp.previous_night_count)
-    need = max(0, 20 - p)
+    need = max(0, NIGHT_COUNT_MONTH_MIN - p)
     return f"{p}+{need}"
 
 
@@ -287,7 +290,7 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
             model.Add(streak[d] <= hard_limit - 1).OnlyEnforceIf(hit_limit.Not())
             penalty_overrun.append(hit_limit)
 
-    # 上段夜班數 + 本段(月底前 E/N) = 20，月底以日曆月最後一天為準
+    # 上段夜班數 + 本段該曆月至月底前 E/N ≥ 門檻（可超過）；月底以日曆月最後一天為準
     first_year = days[0].year
     first_month = days[0].month
     month_end_day = calendar.monthrange(first_year, first_month)[1]
@@ -297,10 +300,6 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
         for e, emp in enumerate(employees):
             if emp.previous_night_count is None:
                 continue
-            if emp.previous_night_count > 20:
-                raise ValueError(
-                    f"{emp.name} 上段夜班數為 {emp.previous_night_count}，已超過 20，無法在月底前湊成 20。"
-                )
 
             # 先做可行性檢查，避免無解時只看到模糊錯誤
             month_days = [days[d] for d in range(month_end_idx + 1) if days[d].year == first_year and days[d].month == first_month]
@@ -311,9 +310,10 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
             else:
                 max_current_nights = 0
             max_total = emp.previous_night_count + max_current_nights
-            if max_total < 20:
+            if max_total < NIGHT_COUNT_MONTH_MIN:
                 raise ValueError(
-                    f"{emp.name} 在月底前最多只能湊到 {max_total} 班夜班(上段{emp.previous_night_count}+本段最多{max_current_nights})，請調整上段夜班數、偏好班別或排班區間。"
+                    f"{emp.name} 在月底前最多只能湊到 {max_total} 班夜班(上段{emp.previous_night_count}+本段最多{max_current_nights})，"
+                    f"無法達到至少 {NIGHT_COUNT_MONTH_MIN} 班，請調整上段夜班數、偏好班別或排班區間。"
                 )
 
             current_nights = sum(
@@ -321,7 +321,7 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
                 for d in range(month_end_idx + 1)
                 if days[d].year == first_year and days[d].month == first_month
             )
-            model.Add(current_nights + emp.previous_night_count == 20)
+            model.Add(current_nights + emp.previous_night_count >= NIGHT_COUNT_MONTH_MIN)
 
     off_count = sum(x[(e, d, "off")] for e in range(e_size) for d in range(d_size))
     preference_score = sum(
@@ -351,7 +351,7 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
         if status == cp_model.INFEASIBLE:
             raise RuntimeError(
                 f"求解器判定條件無解（{label}）："
-                "每日人力下限、預假、連續上班／班種順序（D→E→N）、或「月底前夜班數＝20」等無法同時滿足。"
+                "每日人力下限、預假、連續上班／班種順序（D→E→N）、或「月底前夜班數至少 20（可超過）」等無法同時滿足。"
                 "請檢查：預假是否過多或過集中、上段最後一班與夜班累計、雙班偏好者的班序是否過緊。"
             )
         if status == cp_model.UNKNOWN:
