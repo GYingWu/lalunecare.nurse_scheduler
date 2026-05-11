@@ -12,6 +12,21 @@ CONFIG_PATH = BASE_DIR / "config.sample.json"
 SHIFT_OPTIONS = ["D", "E", "N"]
 
 
+def _optional_shift_cell(val) -> str:
+    """空白欄位在 data_editor 常變成 float NaN；str(NaN) 會變成 'nan' 而誤觸驗證。"""
+    if val is None:
+        return ""
+    try:
+        if pd.isna(val):
+            return ""
+    except TypeError:
+        pass
+    s = str(val).strip()
+    if s.lower() == "nan":
+        return ""
+    return s
+
+
 def load_config() -> dict:
     with CONFIG_PATH.open("r", encoding="utf-8") as f:
         return json.load(f)
@@ -51,7 +66,7 @@ def to_label(d: date) -> str:
 def row_to_employee(row: pd.Series, r_dates: list[str]) -> dict:
     name = str(row["name"]).strip()
     main_shift = str(row["main_shift"]).strip()
-    second_shift = str(row["second_shift"]).strip()
+    second_shift = _optional_shift_cell(row.get("second_shift"))
     if main_shift not in SHIFT_OPTIONS:
         raise ValueError(f"{name} 主偏好班別必須是 D/E/N")
     preferred_shifts = [main_shift]
