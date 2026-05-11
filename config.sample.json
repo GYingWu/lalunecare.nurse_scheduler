@@ -23,7 +23,7 @@
       "name": "謹瑄",
       "preferred_shifts": ["E"],
       "min_rest_days": 9,
-      "previous_last_shift": "1off",
+      "previous_last_shift": "1OF",
       "previous_night_count": null,
       "requested_r_dates": []
     },
