@@ -2,6 +2,18 @@
 
 以表單輸入條件，自動產生 Excel 班表。
 
+## 儲存庫內主要檔案
+
+| 檔案 | 說明 |
+|------|------|
+| `streamlit_app.py` | 網頁介面（Streamlit Cloud 入口） |
+| `nurse_scheduler_v2.py` | 排班核心與 Excel 匯出 |
+| `config.sample.json` | 預設／儲存用設定 |
+| `requirements.txt` | Python 依賴 |
+| `.streamlit/config.toml` | Streamlit 設定 |
+
+本機若需要「雙擊啟動」或範例圖，可自行放在資料夾內，**不必**放進 GitHub（避免與雲端無關、或體積較大的檔案污染 repo）。
+
 ## 本機執行
 
 需安裝 Python 3.10+，於專案目錄執行：
