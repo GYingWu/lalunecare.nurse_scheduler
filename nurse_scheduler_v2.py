@@ -100,6 +100,37 @@ def format_night_carryover_display(emp: Employee) -> str:
     return f"{p}+{need}"
 
 
+def _preflight_staffing(employees: Sequence[Employee], rule: RuleConfig) -> None:
+    """無解時使用者難以判斷原因，先做明顯的人力／下限矛盾檢查。"""
+    n = len(employees)
+    if n == 0:
+        raise ValueError("至少需要一位員工。")
+    if rule.min_d + rule.min_e + rule.min_n > n:
+        s = rule.min_d + rule.min_e + rule.min_n
+        raise ValueError(
+            f"每日需求下限加總 D+E+N ≥ {rule.min_d}+{rule.min_e}+{rule.min_n}={s} 人，"
+            f"大於員工數（{n} 人）。同一天每人只能上一種班，請降低某日下限或增加人力。"
+        )
+    can_d = sum(1 for emp in employees if "D" in emp.preferred_shifts)
+    can_e = sum(1 for emp in employees if "E" in emp.preferred_shifts)
+    can_n = sum(1 for emp in employees if "N" in emp.preferred_shifts)
+    if rule.min_d > can_d:
+        raise ValueError(
+            f"白班 D 每日至少要 {rule.min_d} 人，但只有 {can_d} 位員工的偏好含 D（能排 D）。"
+            "請降低 D 下限或讓更多人能排 D。"
+        )
+    if rule.min_e > can_e:
+        raise ValueError(
+            f"小夜 E 每日至少要 {rule.min_e} 人，但只有 {can_e} 位員工的偏好含 E（能排 E）。"
+            "請降低 E 下限或讓更多人能排 E。"
+        )
+    if rule.min_n > can_n:
+        raise ValueError(
+            f"大夜 N 每日至少要 {rule.min_n} 人，但只有 {can_n} 位員工的偏好含 N（能排 N）。"
+            "請降低 N 下限或讓更多人能排 N。"
+        )
+
+
 def parse_previous_last_shift(raw: str) -> tuple[int, str]:
     text = (raw or "").strip().upper()
     if not text:
@@ -125,6 +156,10 @@ def parse_previous_last_shift(raw: str) -> tuple[int, str]:
 
 
 def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: RuleConfig) -> Dict[str, Dict[date, str]]:
+    if len(days) == 0:
+        raise ValueError("排班區間不可為空。")
+    _preflight_staffing(employees, rule)
+
     holiday_dates = {d for d in days if d.weekday() >= 5}
     if rule.national_holidays:
         holiday_dates.update(d for d in rule.national_holidays if d in set(days))
@@ -308,10 +343,23 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
 
     solver = cp_model.CpSolver()
     solver.parameters.random_seed = rule.random_seed
-    solver.parameters.max_time_in_seconds = 20
+    # 複雜約束下 20s 常得到 UNKNOWN（非證明無解）；略放寬時間較易找到可行解
+    solver.parameters.max_time_in_seconds = 180
     status = solver.Solve(model)
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        raise RuntimeError("找不到符合條件的排班，請放寬條件後再試。")
+        label = solver.StatusName(status)
+        if status == cp_model.INFEASIBLE:
+            raise RuntimeError(
+                f"求解器判定條件無解（{label}）："
+                "每日人力下限、預假、連續上班／班種順序（D→E→N）、或「月底前夜班數＝20」等無法同時滿足。"
+                "請檢查：預假是否過多或過集中、上段最後一班與夜班累計、雙班偏好者的班序是否過緊。"
+            )
+        if status == cp_model.UNKNOWN:
+            raise RuntimeError(
+                f"在計算時間內尚未找到可行解（{label}），不代表必然無解。"
+                "請按「下一版」換亂數種子再試，或略放寬每日 D/E/N 下限、減少預假；若仍失敗再延長區間分段排。"
+            )
+        raise RuntimeError(f"排班求解未完成（{label}），請放寬條件或稍後再試。")
 
     result: Dict[str, Dict[date, str]] = {}
     for e, emp in enumerate(employees):
