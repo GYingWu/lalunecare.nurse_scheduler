@@ -15,6 +15,11 @@ REST_TYPES = ("R", "off")
 ALL_TYPES = SHIFT_TYPES + REST_TYPES
 
 
+class ScheduleProvenInfeasible(RuntimeError):
+    """CP-SAT 狀態為 INFEASIBLE（已證明約束無解）；換亂數種子不會改變可行性。"""
+
+
+
 @dataclass
 class Employee:
     name: str
@@ -353,7 +358,7 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         label = solver.StatusName(status)
         if status == cp_model.INFEASIBLE:
-            raise RuntimeError(
+            raise ScheduleProvenInfeasible(
                 f"求解器判定條件無解（{label}）："
                 "每日人力下限、預假、連續上班、跨日班序（禁 E→D、N→D、N→E）、或「月底前夜班數剛好 20」等無法同時滿足。"
                 "請檢查：預假是否過多或過集中、上段最後一班與夜班累計、上段末班若為 E／N 是否與本段衝突。"

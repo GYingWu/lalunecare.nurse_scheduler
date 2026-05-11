@@ -1,11 +1,20 @@
 import json
+import time
 from datetime import date
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
-from nurse_scheduler_v2 import RuleConfig, build_employees, date_range, export_to_excel, parse_date, solve_schedule
+from nurse_scheduler_v2 import (
+    RuleConfig,
+    ScheduleProvenInfeasible,
+    build_employees,
+    date_range,
+    export_to_excel,
+    parse_date,
+    solve_schedule,
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "config.sample.json"
@@ -206,7 +215,7 @@ if generate_clicked or next_clicked:
         if not d_counts or not e_counts or not n_counts:
             raise ValueError("每日需求的 D/E/N 人數都至少要選一個數字")
 
-        seed_used = st.session_state.base_seed + st.session_state.version_offset
+        start_seed = st.session_state.base_seed + st.session_state.version_offset
         employees = []
         for _, row in edited_df.iterrows():
             name = str(row["name"]).strip()
@@ -222,29 +231,66 @@ if generate_clicked or next_clicked:
                 "N": {"min": min(n_counts), "max": max(n_counts)},
             },
             "national_holidays": national_holidays,
-            "random_seed": int(seed_used),
+            "random_seed": int(start_seed),
             "employees": employees,
             "output_file": output_file.strip() or "nurse_schedule.xlsx",
         }
-        save_config(new_cfg)
 
         employee_objs = build_employees(new_cfg["employees"])
         days = date_range(parse_date(new_cfg["date_range"]["start"]), parse_date(new_cfg["date_range"]["end"]))
-        rule = RuleConfig(
-            min_d=new_cfg["daily_requirements"]["D"]["min"],
-            max_d=new_cfg["daily_requirements"]["D"]["max"],
-            min_e=new_cfg["daily_requirements"]["E"]["min"],
-            max_e=new_cfg["daily_requirements"]["E"]["max"],
-            min_n=new_cfg["daily_requirements"]["N"]["min"],
-            max_n=new_cfg["daily_requirements"]["N"]["max"],
-            national_holidays={parse_date(d) for d in new_cfg["national_holidays"]},
-            random_seed=seed_used,
-        )
-        schedule = solve_schedule(employee_objs, days, rule)
+        nat = {parse_date(d) for d in new_cfg["national_holidays"]}
+        dr = new_cfg["daily_requirements"]
+        wall_s = 3600.0
+        t_wall0 = time.monotonic()
+        deadline = t_wall0 + wall_s
+        n_tries = 0
+        last_err: BaseException | None = None
+        schedule = None
+        seed_used = start_seed
+
+        with st.spinner("求解中（最多 1 小時；無解時會自動換種子再試）…"):
+            while time.monotonic() < deadline:
+                seed_try = start_seed + n_tries
+                rule = RuleConfig(
+                    min_d=dr["D"]["min"],
+                    max_d=dr["D"]["max"],
+                    min_e=dr["E"]["min"],
+                    max_e=dr["E"]["max"],
+                    min_n=dr["N"]["min"],
+                    max_n=dr["N"]["max"],
+                    national_holidays=nat,
+                    random_seed=seed_try,
+                )
+                try:
+                    schedule = solve_schedule(employee_objs, days, rule)
+                    seed_used = seed_try
+                    n_tries += 1
+                    break
+                except ValueError:
+                    raise
+                except ScheduleProvenInfeasible:
+                    raise
+                except RuntimeError as e:
+                    last_err = e
+                    n_tries += 1
+            else:
+                elapsed = time.monotonic() - t_wall0
+                raise RuntimeError(
+                    f"已於約 {elapsed:.0f} 秒內嘗試 {n_tries} 個種子仍無解（上限 {wall_s / 60:.0f} 分鐘）。"
+                    f"最後訊息：{last_err}"
+                )
+
+        new_cfg["random_seed"] = int(seed_used)
+        st.session_state.base_seed = int(seed_used) - st.session_state.version_offset
+        save_config(new_cfg)
+
         out_name = new_cfg["output_file"].strip() or "nurse_schedule.xlsx"
         out_path = BASE_DIR / out_name
-        export_to_excel(str(out_path), employee_objs, schedule, days, rule.national_holidays)
-        st.success(f"完成（第 {st.session_state.version_offset + 1} 版）")
+        export_to_excel(str(out_path), employee_objs, schedule, days, nat)
+        msg = f"完成（第 {st.session_state.version_offset + 1} 版，種子 {seed_used}）"
+        if n_tries > 1:
+            msg += f"；共嘗試 {n_tries} 個種子"
+        st.success(msg)
         if out_path.is_file():
             st.download_button(
                 label="下載 Excel",
