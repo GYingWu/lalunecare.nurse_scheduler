@@ -66,4 +66,4 @@ git push -u origin main
 - 免費版 App 一陣子沒人使用會**休眠**，第一次開可能要等 30～90 秒，請重新整理。
 - 到 Cloud 後台該 App → **Logs**，看紅字是否為套件安裝失敗或 `config.sample.json` 找不到。
 - **Main file path** 必須是：`streamlit_app.py`（在 repo 根目錄）。
-- 若出現 **Error during processing dependencies**：到 App → **Logs** 複製 pip／uv 的 `ERROR` 段落。常見原因之一是雲端使用 **Python 3.13**，而舊版 **ortools** 沒有對應的預編譯輪子（本 repo 已將 `ortools` 升到含 cp313 輪子的版本）。另請確認根目錄有 **`requirements.txt`**（勿含中文註解，避免編碼問題）；**Python 版本**請在 Cloud **App settings → Advanced settings** 選擇 3.12 或 3.13（`runtime.txt` 在部分專案可能被忽略，以介面設定為準）。修改後 **push** 並 **Redeploy**。
+- 若出現 **Error during processing dependencies**：到 App → **Logs** 查看 **uv** 或 **pip** 區塊的 `ERROR`。常見情況：(1) 雲端使用 **Python 3.14**，舊版 **ortools／pandas** 沒有對應 ABI 的輪子，**uv** 會直接報 *no wheels with a matching Python ABI*；(2) **pip** 改抓 **pandas** 的原始碼包並編譯輪子，耗時極長後仍可能失敗。本 repo 的 **`requirements.txt`** 已鎖到含 **cp314** 輪子的版本組合。若仍失敗，請在 **App settings → Advanced settings** 將 **Python** 改為 **3.12** 或 **3.13** 後再部署（`runtime.txt` 在 Community Cloud 上經常被忽略，以介面為準）。修改後 **push** 並 **Redeploy**。

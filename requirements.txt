@@ -1,7 +1,6 @@
-# Pinned for Streamlit Community Cloud (Linux, Python 3.12/3.13).
-# ortools 9.10 has no cp313 wheels; Cloud may use 3.13 -> install fails or hangs.
-# Do not add protobuf here (transitive deps resolve it).
-streamlit==1.39.0
-pandas==2.2.3
+# Community Cloud may use Python 3.14 + uv first: every pin below must have matching
+# manylinux/macOS wheels (no cp314 wheel => uv fails; pandas sdist => 45min+ pip build).
+streamlit==1.57.0
+pandas==2.3.3
 openpyxl==3.1.5
-ortools==9.12.4544
+ortools==9.15.6755
