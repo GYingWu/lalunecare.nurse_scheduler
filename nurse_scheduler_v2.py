@@ -199,11 +199,18 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
                 if s not in emp.preferred_shifts:
                     model.Add(x[(e, d, s)] == 0)
 
-    # 班種順序規則：D -> E -> N -> D（相鄰兩個上班日之間，不可「逆轉」）
+    # 班種順序規則：D→E→N→D 順向銜接（相鄰曆日若皆上班）；同班可連續。
+    # 例外：僅能 D/N 者合約環上缺 E，不應強制「D 後必須先 E 才能 N」，否則幾乎無法排。
     shift_successor = {"D": "E", "E": "N", "N": "D"}
 
-    def den_adjacent_ok(s_from: str, s_to: str) -> bool:
-        return s_to == s_from or s_to == shift_successor[s_from]
+    def den_adjacent_ok(s_from: str, s_to: str, allowed: set[str]) -> bool:
+        if s_to == s_from:
+            return True
+        if s_to == shift_successor[s_from]:
+            return True
+        if allowed == {"D", "N"} and s_from in SHIFT_TYPES and s_to in SHIFT_TYPES:
+            return True
+        return False
 
     # 本段內：僅對可上兩種班者限制相鄰日班種
     for e, emp in enumerate(employees):
@@ -213,7 +220,7 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
         for d in range(d_size - 1):
             for s1 in allowed:
                 for s2 in allowed:
-                    if den_adjacent_ok(s1, s2):
+                    if den_adjacent_ok(s1, s2, allowed):
                         continue
                     model.Add(x[(e, d, s1)] + x[(e, d + 1, s2)] <= 1)
 
@@ -269,7 +276,7 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
                 model.Add(first_work + sum_before <= 1)
                 model.Add(first_work >= w[d] - sum_before)
                 for s2 in allowed:
-                    if den_adjacent_ok(prev_type, s2):
+                    if den_adjacent_ok(prev_type, s2, allowed):
                         continue
                     model.Add(x[(e, d, s2)] == 0).OnlyEnforceIf(first_work)
 
