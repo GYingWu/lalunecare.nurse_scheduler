@@ -13,3 +13,7 @@ venv/
 .idea/
 .vscode/
 .DS_Store
+
+# 本機選用（不進 GitHub）
+啟動排班系統.bat
+班表範例.jpg
