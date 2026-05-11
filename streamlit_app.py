@@ -90,6 +90,10 @@ def row_to_employee(row: pd.Series, r_dates: list[str]) -> dict:
 
 st.set_page_config(page_title="護理排班系統", page_icon="🗓️", layout="wide")
 st.title("護理排班系統")
+st.caption(
+    "範例：同時綁「六人上段夜班＋月底 E/N 剛好 20」常無解，請分批填。"
+    "「雅芳2N、佩萱1E、雅萍2E、尹汝2E」與四起 20 併用也易無解；預設檔該四欄用 1off 以保證可排。"
+)
 
 try:
     cfg = load_config()

@@ -136,9 +136,10 @@ def _preflight_staffing(employees: Sequence[Employee], rule: RuleConfig) -> None
 
 def parse_previous_last_shift(raw: str) -> tuple[int, str]:
     text = (raw or "").strip().upper()
-    # 表單常見：「1OF」被看成或打成「10F」（數字 1 與字母 O）
-    if text == "10F":
-        text = "1OF"
+    # 表單常見：「數字+OF」被看成「數字+0F」（字母 O 誤為 0）
+    _of_typos = {"10F": "1OF", "20F": "2OF", "30F": "3OF", "40F": "4OF"}
+    if text in _of_typos:
+        text = _of_typos[text]
     if not text:
         return 1, "off"
     idx = 0

@@ -15,7 +15,7 @@
       "name": "玉如",
       "preferred_shifts": ["E"],
       "min_rest_days": 9,
-      "previous_last_shift": "1off",
+      "previous_last_shift": "3D",
       "previous_night_count": null,
       "requested_r_dates": []
     },
@@ -31,7 +31,7 @@
       "name": "沛蓉",
       "preferred_shifts": ["E", "D"],
       "min_rest_days": 9,
-      "previous_last_shift": "1off",
+      "previous_last_shift": "4D",
       "previous_night_count": null,
       "requested_r_dates": []
     },
@@ -39,7 +39,7 @@
       "name": "家瑋",
       "preferred_shifts": ["N"],
       "min_rest_days": 9,
-      "previous_last_shift": "1off",
+      "previous_last_shift": "3N",
       "previous_night_count": null,
       "requested_r_dates": []
     },
@@ -63,7 +63,7 @@
       "name": "育惠",
       "preferred_shifts": ["D", "E"],
       "min_rest_days": 9,
-      "previous_last_shift": "1off",
+      "previous_last_shift": "3OF",
       "previous_night_count": 13,
       "requested_r_dates": []
     },
@@ -71,7 +71,7 @@
       "name": "秋瑾",
       "preferred_shifts": ["D", "E"],
       "min_rest_days": 9,
-      "previous_last_shift": "1off",
+      "previous_last_shift": "4OF",
       "previous_night_count": 11,
       "requested_r_dates": []
     },
@@ -87,7 +87,7 @@
       "name": "瑋真",
       "preferred_shifts": ["D", "N"],
       "min_rest_days": 9,
-      "previous_last_shift": "1off",
+      "previous_last_shift": "4OF",
       "previous_night_count": null,
       "requested_r_dates": []
     },
@@ -103,7 +103,7 @@
       "name": "捷宇",
       "preferred_shifts": ["N"],
       "min_rest_days": 9,
-      "previous_last_shift": "1off",
+      "previous_last_shift": "2OF",
       "previous_night_count": null,
       "requested_r_dates": []
     }
