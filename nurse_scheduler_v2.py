@@ -199,30 +199,8 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
                 if s not in emp.preferred_shifts:
                     model.Add(x[(e, d, s)] == 0)
 
-    # 班種順序規則：D→E→N→D 順向銜接（相鄰曆日若皆上班）；同班可連續。
-    # 例外：僅能 D/N 者合約環上缺 E，不應強制「D 後必須先 E 才能 N」，否則幾乎無法排。
-    shift_successor = {"D": "E", "E": "N", "N": "D"}
-
-    def den_adjacent_ok(s_from: str, s_to: str, allowed: set[str]) -> bool:
-        if s_to == s_from:
-            return True
-        if s_to == shift_successor[s_from]:
-            return True
-        if allowed == {"D", "N"} and s_from in SHIFT_TYPES and s_to in SHIFT_TYPES:
-            return True
-        return False
-
-    # 本段內：僅對可上兩種班者限制相鄰日班種
-    for e, emp in enumerate(employees):
-        if len(emp.preferred_shifts) < 2:
-            continue
-        allowed = set(emp.preferred_shifts)
-        for d in range(d_size - 1):
-            for s1 in allowed:
-                for s2 in allowed:
-                    if den_adjacent_ok(s1, s2, allowed):
-                        continue
-                    model.Add(x[(e, d, s1)] + x[(e, d + 1, s2)] <= 1)
+    # 實務上 D→E→N 為「同日」班系循環；本模型每日僅標一個班別，故不在相鄰曆日強制 DEN 單步銜接
+    # （例如連續兩天 D 接 N 視為兩個完整循環的簡化標記，不應禁止）。
 
     for d in range(d_size):
         model.Add(sum(x[(e, d, "D")] for e in range(e_size)) >= rule.min_d)
@@ -265,20 +243,6 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
 
         for d in range(d_size):
             model.Add(streak[d] <= hard_limit)
-
-        # 上段最後一班為上班班種時：與本段「第一個上班日」之間仍須遵守 DEN 相鄰規則
-        if prev_type in SHIFT_TYPES:
-            allowed = set(emp.preferred_shifts)
-            for d in range(d_size):
-                sum_before = sum(w[i] for i in range(d))
-                first_work = model.NewBoolVar(f"first_work_e{e}_d{d}")
-                model.Add(first_work <= w[d])
-                model.Add(first_work + sum_before <= 1)
-                model.Add(first_work >= w[d] - sum_before)
-                for s2 in allowed:
-                    if den_adjacent_ok(prev_type, s2, allowed):
-                        continue
-                    model.Add(x[(e, d, s2)] == 0).OnlyEnforceIf(first_work)
 
         weekend_rest = model.NewIntVar(0, d_size, f"weekend_rest_e{e}")
         model.Add(
@@ -358,8 +322,8 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
         if status == cp_model.INFEASIBLE:
             raise RuntimeError(
                 f"求解器判定條件無解（{label}）："
-                "每日人力下限、預假、連續上班／班種順序（D→E→N）、或「月底前夜班數至少 20（可超過）」等無法同時滿足。"
-                "請檢查：預假是否過多或過集中、上段最後一班與夜班累計、雙班偏好者的班序是否過緊。"
+                "每日人力下限、預假、連續上班、或「月底前夜班數至少 20（可超過）」等無法同時滿足。"
+                "請檢查：預假是否過多或過集中、上段最後一班與夜班累計。"
             )
         if status == cp_model.UNKNOWN:
             raise RuntimeError(
