@@ -66,4 +66,4 @@ git push -u origin main
 - 免費版 App 一陣子沒人使用會**休眠**，第一次開可能要等 30～90 秒，請重新整理。
 - 到 Cloud 後台該 App → **Logs**，看紅字是否為套件安裝失敗或 `config.sample.json` 找不到。
 - **Main file path** 必須是：`streamlit_app.py`（在 repo 根目錄）。
-- 若出現 **Error during processing dependencies**：請確認 repo 根目錄有 **`runtime.txt`**（指定 Python 3.11）與 **`requirements.txt`**（勿含中文註解，避免 pip 編碼錯誤）；修改後 **push** 並在 Cloud **Redeploy**。
+- 若出現 **Error during processing dependencies**：到 App → **Logs** 複製 pip／uv 的 `ERROR` 段落。常見原因之一是雲端使用 **Python 3.13**，而舊版 **ortools** 沒有對應的預編譯輪子（本 repo 已將 `ortools` 升到含 cp313 輪子的版本）。另請確認根目錄有 **`requirements.txt`**（勿含中文註解，避免編碼問題）；**Python 版本**請在 Cloud **App settings → Advanced settings** 選擇 3.12 或 3.13（`runtime.txt` 在部分專案可能被忽略，以介面設定為準）。修改後 **push** 並 **Redeploy**。
