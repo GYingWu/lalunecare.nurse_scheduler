@@ -4,37 +4,24 @@
     "end": "2026-05-16"
   },
   "daily_requirements": {
-    "D": {
-      "min": 3,
-      "max": 4
-    },
-    "E": {
-      "min": 2,
-      "max": 2
-    },
-    "N": {
-      "min": 2,
-      "max": 2
-    }
+    "D": { "min": 3, "max": 4 },
+    "E": { "min": 2, "max": 3 },
+    "N": { "min": 2, "max": 2 }
   },
   "national_holidays": [],
   "random_seed": 42,
   "employees": [
     {
       "name": "玉如",
-      "preferred_shifts": [
-        "E"
-      ],
-      "min_rest_days": 10,
+      "preferred_shifts": ["E"],
+      "min_rest_days": 9,
       "previous_last_shift": "1off",
       "previous_night_count": null,
       "requested_r_dates": []
     },
     {
       "name": "謹瑄",
-      "preferred_shifts": [
-        "E"
-      ],
+      "preferred_shifts": ["E"],
       "min_rest_days": 9,
       "previous_last_shift": "1off",
       "previous_night_count": null,
@@ -42,10 +29,7 @@
     },
     {
       "name": "沛蓉",
-      "preferred_shifts": [
-        "E",
-        "D"
-      ],
+      "preferred_shifts": ["E", "D"],
       "min_rest_days": 9,
       "previous_last_shift": "1off",
       "previous_night_count": null,
@@ -53,9 +37,7 @@
     },
     {
       "name": "家瑋",
-      "preferred_shifts": [
-        "N"
-      ],
+      "preferred_shifts": ["N"],
       "min_rest_days": 9,
       "previous_last_shift": "1off",
       "previous_night_count": null,
@@ -63,50 +45,39 @@
     },
     {
       "name": "雅芳",
-      "preferred_shifts": [
-        "N"
-      ],
+      "preferred_shifts": ["N"],
       "min_rest_days": 9,
       "previous_last_shift": "1off",
-      "previous_night_count": null,
+      "previous_night_count": 12,
       "requested_r_dates": []
     },
     {
       "name": "佩萱",
-      "preferred_shifts": [
-        "N"
-      ],
+      "preferred_shifts": ["N"],
       "min_rest_days": 9,
       "previous_last_shift": "1off",
-      "previous_night_count": 19,
+      "previous_night_count": 11,
       "requested_r_dates": []
     },
     {
       "name": "育惠",
-      "preferred_shifts": [
-        "D",
-        "E"
-      ],
-      "min_rest_days": 8,
+      "preferred_shifts": ["D", "E"],
+      "min_rest_days": 9,
       "previous_last_shift": "1off",
-      "previous_night_count": null,
+      "previous_night_count": 13,
       "requested_r_dates": []
     },
     {
       "name": "秋瑾",
-      "preferred_shifts": [
-        "D"
-      ],
+      "preferred_shifts": ["D", "E"],
       "min_rest_days": 9,
       "previous_last_shift": "1off",
-      "previous_night_count": null,
+      "previous_night_count": 11,
       "requested_r_dates": []
     },
     {
       "name": "雅萍",
-      "preferred_shifts": [
-        "D"
-      ],
+      "preferred_shifts": ["D"],
       "min_rest_days": 9,
       "previous_last_shift": "1off",
       "previous_night_count": null,
@@ -114,20 +85,15 @@
     },
     {
       "name": "瑋真",
-      "preferred_shifts": [
-        "D",
-        "N"
-      ],
-      "min_rest_days": 10,
+      "preferred_shifts": ["D", "N"],
+      "min_rest_days": 9,
       "previous_last_shift": "1off",
       "previous_night_count": null,
       "requested_r_dates": []
     },
     {
       "name": "尹汝",
-      "preferred_shifts": [
-        "D"
-      ],
+      "preferred_shifts": ["D", "E"],
       "min_rest_days": 9,
       "previous_last_shift": "1off",
       "previous_night_count": null,
@@ -135,10 +101,8 @@
     },
     {
       "name": "捷宇",
-      "preferred_shifts": [
-        "D"
-      ],
-      "min_rest_days": 10,
+      "preferred_shifts": ["N"],
+      "min_rest_days": 9,
       "previous_last_shift": "1off",
       "previous_night_count": null,
       "requested_r_dates": []
