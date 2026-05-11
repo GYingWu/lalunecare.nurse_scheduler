@@ -385,6 +385,19 @@ def solve_schedule(employees: Sequence[Employee], days: Sequence[date], rule: Ru
     return result
 
 
+def _excel_display_off_as_of(text: str) -> str:
+    """Excel 顯示用：將末段 off／Off／OFF 改為 OF（內部仍為小寫 off）。"""
+    s = (text or "").strip()
+    low = s.lower()
+    if low.endswith("off"):
+        return s[: len(s) - 3] + "OF"
+    return s
+
+
+def _excel_shift_cell_display(internal: str) -> str:
+    return "OF" if internal == "off" else internal
+
+
 def export_to_excel(
     path: str,
     employees: Sequence[Employee],
@@ -420,13 +433,13 @@ def export_to_excel(
 
     for r, emp in enumerate(employees, start=3):
         ws.cell(row=r, column=1, value=emp.name)
-        ws.cell(row=r, column=2, value=emp.previous_last_shift)
+        ws.cell(row=r, column=2, value=_excel_display_off_as_of(emp.previous_last_shift))
         ws.cell(row=r, column=3, value=format_night_carryover_display(emp))
         rest_total = 0
         holiday_rest = 0
         for c, day in enumerate(days, start=first_day_col):
             v = schedule[emp.name][day]
-            cell = ws.cell(row=r, column=c, value=v)
+            cell = ws.cell(row=r, column=c, value=_excel_shift_cell_display(v))
             cell.alignment = Alignment(horizontal="center", vertical="center")
             cell.fill = fills[v]
             if v in REST_TYPES:
